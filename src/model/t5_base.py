@@ -10,6 +10,7 @@ from transformers import T5TokenizerFast as T5Tokenizer
 
 from model.data_module import DatasetModule
 
+torch.cuda.empty_cache()
 
 class BaseModel(pl.LightningModule):
     def __init__(
@@ -28,41 +29,50 @@ class BaseModel(pl.LightningModule):
         self.save_only_last_epoch = save_only_last_epoch
 
     def forward(self, input_ids, attention_mask, decoder_attention_mask, labels=None):
-        return self.model(
+        output = self.model(
             input_ids=input_ids,
             attention_mask=attention_mask,
             decoder_attention_mask=decoder_attention_mask,
             labels=labels,
         )
+        return output.loss, output.logits
 
     def loss_cal(self, batch, batch_size):
         input_ids = batch['source_text_input_ids']
         attention_mask = batch['source_text_attention_mask']
-        labels = batch['labels']
         labels_attention_mask = batch['labels_attention_mask']
+        labels = batch['labels']
 
-        loss, outputs = self(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            labels=labels,
-            decoder_attention_mask=labels_attention_mask
+        loss, logits = self(
+            input_ids = input_ids,
+            attention_mask = attention_mask,
+            labels = labels,
+            decoder_attention_mask = labels_attention_mask
         )
         return loss
 
     def training_step(self, batch, batch_size):
+        """ training step """
         loss = self.loss_cal(batch, batch_size)
-        self.log('train_loss', loss, prog_bar=True, logger=True, on_epoch=True, on_step=True)
+        self.log(
+            "train_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
+        )
         return loss
 
     def validation_step(self, batch, batch_size):
+        """ validation step """
         loss = self.loss_cal(batch, batch_size)
-        self.log('valid_loss', loss, prog_bar=True, logger=True, on_epoch=True, on_step=True)
+        self.log(
+            "val_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
+        )
         return loss
 
     def test_step(self, batch, batch_size):
+        """ test step """
         loss = self.loss_cal(batch, batch_size)
-        self.log('test_loss', loss, prog_bar=True, logger=True, on_epoch=True, on_step=True)
+        self.log("test_loss", loss, prog_bar=True, logger=True)
         return loss
+
 
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=1e-4)
@@ -98,9 +108,14 @@ class T5BaseModel():
         self.tokenizer = T5Tokenizer.from_pretrained(model_name)
         self.model = T5ForConditionalGeneration.from_pretrained(model_name, return_dict=True)
 
-    def load_model(self, model_path: str, use_gpu=False):
+    def load_model(self, model_path: str, use_gpu:bool=True):
+        """ Load a checkpoint for inference/prediction
+        Args:
+            model_path (str): path to model directory
+            use_gpy (bool): if True, model use gpu for inference/pretraining
+        """
+        self.tokenizer = T5Tokenizer.from_pretrained(model_path, return_dict=True)
         self.model = T5ForConditionalGeneration.from_pretrained(model_path)
-        self.tokenizer = T5ForConditionalGeneration.from_pretrained(model_path)
 
         if use_gpu:
             if torch.cuda.is_available():
@@ -120,11 +135,12 @@ class T5BaseModel():
         batch_size: int = 8,
         max_epochs: int = 5,
         use_gpu: bool = True,
+        gpus: int = 1,
         save_dir: str = 'outputs',
         early_stopping_patience: int = 0,
         precision=32,
         logger='default',
-        dataloader_num_workers: int = 1,
+        dataloader_num_workers: int = 4,
         save_only_last_epoch: bool = False,
     ):
         """train T5 model
@@ -140,7 +156,7 @@ class T5BaseModel():
             early_stopping_patience (int, optional): early stopping patience. Defaults to 0.
             precisions (int, optional): precision. Defaults to 32.
             logger (str, optional): logger. Defaults to 'default'.
-            dataloader_num_workers (int, optional): dataloader num workers. Defaults to 1.
+            dataloader_num_workers (int, optional): dataloader num workers. Defaults to 4.
             save_only_last_epoch (bool, optional): save only last epoch. Defaults to False.
         """
         self.T5Model = BaseModel(
@@ -172,13 +188,14 @@ class T5BaseModel():
                     mode='min'
                 ))
 
-        gpus = 1 if use_gpu else 0
+        gpus = gpus if use_gpu else 0
         loggers = True if logger == 'default' else logger
         trainer = pl.Trainer(
             logger=loggers,
             callbacks=callbacks,
             max_epochs=max_epochs,
-            gpus=gpus,
+            accelerator='gpu' if use_gpu else 'cpu',
+            devices=gpus,
             precision=precision,
             log_every_n_steps=1
         )

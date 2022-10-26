@@ -111,3 +111,11 @@ class DatasetModule(pl.LightningDataModule):
             shuffle=self.shuffle,
             num_workers=self.num_workers,
         )
+
+    def test_dataloader(self):
+        return DataLoader(
+            self.valid_dataset,
+            batch_size=self.batch_size,
+            shuffle=self.shuffle,
+            num_workers=self.num_workers,
+        )
