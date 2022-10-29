@@ -1,7 +1,9 @@
-t5-couplet
 lightning_logs
+t5-couplet
+t5-poems
 .vscode
 .idea
+data/poems/raw
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,0 +1,2 @@
+data/poems/poem.csv filter=lfs diff=lfs merge=lfs -text
+data/poems/poems_test.csv filter=lfs diff=lfs merge=lfs -text
