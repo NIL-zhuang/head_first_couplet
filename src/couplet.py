@@ -4,13 +4,13 @@ import pandas as pd
 import pytorch_lightning as pl
 from hanziconv import HanziConv
 
-from config import COUPLET_PATH
 from model.t5_base import T5BaseModel
 
 MAX_SEQ_LEN = 32
 COUPLET_PROMPT = "对联: "
 MAX_IN_TOKENS = MAX_SEQ_LEN + len(COUPLET_PROMPT)
 MAX_OUT_TOKENS = MAX_SEQ_LEN
+COUPLET_PATH = os.path.join(os.getcwd(), "data", "couplet")
 
 
 class CoupletDataset():
@@ -57,6 +57,7 @@ class CoupletDataset():
 
         return data_df
 
+
 pl.seed_everything(42)
 
 if __name__ == '__main__':
@@ -66,7 +67,7 @@ if __name__ == '__main__':
     dataset = CoupletDataset(path=COUPLET_PATH, prompt=COUPLET_PROMPT)
 
     model.train(
-        train_df = dataset.train_df,
+        train_df=dataset.train_df,
         eval_df=dataset.test_df,
         source_max_token_len=MAX_IN_TOKENS,
         target_max_token_len=MAX_OUT_TOKENS,

@@ -1,7 +1,7 @@
-
 lightning_logs
 .vscode
 .idea
+data/poems/raw
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
