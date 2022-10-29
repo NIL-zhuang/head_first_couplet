@@ -1,9 +1,8 @@
 import os
 
 import pandas as pd
-import torch
+import pytorch_lightning as pl
 from hanziconv import HanziConv
-from rich.progress import track
 
 from config import COUPLET_PATH
 from model.t5_base import T5BaseModel
@@ -21,8 +20,8 @@ class CoupletDataset():
         prompt="对联: "
     ):
         self.prompt = prompt
-        train_path = os.path.join(COUPLET_PATH, 'train')
-        test_path = os.path.join(COUPLET_PATH, 'test')
+        train_path = os.path.join(path, 'train')
+        test_path = os.path.join(path, 'test')
 
         self.train_df = self.build_dataset(train_path)
         self.test_df = self.build_dataset(test_path)
@@ -58,16 +57,21 @@ class CoupletDataset():
 
         return data_df
 
-
-class MengZiCouplet(T5BaseModel):
-    def __init__(self) -> None:
-        super().__init__()
-        self.device = torch.device('cuda')
-        self.from_pretrained(model_name='Langboat/mengzi-t5-base')
-
+pl.seed_everything(42)
 
 if __name__ == '__main__':
-    model = MengZiCouplet()
-    model.tokenizer("对联: 你好")
-    # dataset = CoupletDataset(path=COUPLET_PATH, prompt=COUPLET_PROMPT)
-    # print(dataset.train_df.head())
+    model = T5BaseModel()
+    model_path = os.path.join(os.getcwd(), 'mengzi-t5-base')
+    model.load_model(model_path, use_gpu=True)
+    dataset = CoupletDataset(path=COUPLET_PATH, prompt=COUPLET_PROMPT)
+
+    model.train(
+        train_df = dataset.train_df,
+        eval_df=dataset.test_df,
+        source_max_token_len=MAX_IN_TOKENS,
+        target_max_token_len=MAX_OUT_TOKENS,
+        batch_size=64,
+        max_epochs=5,
+        use_gpu=True,
+        save_dir="./t5-couplet"
+    )
