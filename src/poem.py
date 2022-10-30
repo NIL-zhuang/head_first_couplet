@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 
 from model.t5_base import T5BaseModel
 
-TEST_FLOW = True
+TEST_FLOW = False
 AUTHOR_PROMPT = "模仿："
 TITLE_PROMPT = "作诗："
 EOS_TOKEN = "</s>"
@@ -53,6 +53,7 @@ class PoemDataset():
 
 
 def make_train_dataset(path: str = POEM_PATH, split_rate: float = 0.02):
+    print(f"Loading data from {path}")
     poem_dataset = PoemDataset(path)
     author_title_poem = poem_dataset.build_dataset(imitate_author=True, imitate_title=False)
     # author_poem = poem_dataset.build_dataset(imitate_author=True, imitate_title=False)
@@ -83,10 +84,41 @@ def train(
         batch_size=32,
         max_epochs=5,
         use_gpu=True,
-        save_dir='./t5-poem'
+        save_dir='./t5-poems'
     )
 
+class Poem():
+    def __init__(self, model_path:str) -> None:
+        self.model=T5BaseModel()
+        self.model.load_model(model_path, use_gpu=True)
+        self.model.model = self.model.model.to('cuda')
+
+    def predict(self, in_str:str):
+        return self.model.predict(
+            in_str,
+            max_length=MAX_OUT_TOKENS,
+            num_beams=1,
+            top_p=1.0,
+            top_k=1,
+            do_sample=True
+        )
+
+def main():
+    model_path =r"/home/zhuangzy/head_first_couplet/t5-poems/simplet5-epoch-4-train-loss-3.5093-val-loss-3.4993"
+    model = Poem(model_path)
+
+    while(True):
+        author = input(AUTHOR_PROMPT)
+        title = input(TITLE_PROMPT)
+        if author is not None and len(author) != 0:
+            s = AUTHOR_PROMPT + author + EOS_TOKEN + TITLE_PROMPT + title
+        else:
+            s = TITLE_PROMPT + title
+        print(' '*5, s)
+        next = model.predict(s)
+        print(next[0])
 
 if __name__ == '__main__':
+    # main()
     train_df, test_df = make_train_dataset()
     train(train_df, test_df)
