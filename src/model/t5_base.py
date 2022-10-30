@@ -12,6 +12,7 @@ from model.data_module import DatasetModule
 
 torch.cuda.empty_cache()
 
+
 class BaseModel(pl.LightningModule):
     def __init__(
         self,
@@ -44,10 +45,10 @@ class BaseModel(pl.LightningModule):
         labels = batch['labels']
 
         loss, logits = self(
-            input_ids = input_ids,
-            attention_mask = attention_mask,
-            labels = labels,
-            decoder_attention_mask = labels_attention_mask
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels=labels,
+            decoder_attention_mask=labels_attention_mask
         )
         return loss
 
@@ -72,7 +73,6 @@ class BaseModel(pl.LightningModule):
         loss = self.loss_cal(batch, batch_size)
         self.log("test_loss", loss, prog_bar=True, logger=True)
         return loss
-
 
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=1e-4)
@@ -108,7 +108,7 @@ class T5BaseModel():
         self.tokenizer = T5Tokenizer.from_pretrained(model_name)
         self.model = T5ForConditionalGeneration.from_pretrained(model_name, return_dict=True)
 
-    def load_model(self, model_path: str, use_gpu:bool=True):
+    def load_model(self, model_path: str, use_gpu: bool = True):
         """ Load a checkpoint for inference/prediction
         Args:
             model_path (str): path to model directory

@@ -3,7 +3,7 @@ t5-couplet
 t5-poems
 .vscode
 .idea
-data/poems/raw
+data/poems
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

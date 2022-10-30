@@ -1,10 +1,9 @@
-from operator import ne
-
 from model.t5_base import T5BaseModel
 
 COUPLET_PROMPOT = '对联: '
 MAX_SEQ_LEN = 32
-MAX_OUT_TOKENS=512
+MAX_OUT_TOKENS = 512
+
 
 class Couplet():
     def __init__(self, model_path) -> None:
@@ -28,11 +27,12 @@ class Couplet():
             do_sample=True
         )
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     model_path = r'/home/zhuangzy/head_first_couplet/t5-couplet/simplet5-epoch-4-train-loss-2.4849-val-loss-2.9282'
     model = Couplet(model_path)
 
-    while(True):
+    while (True):
         s = input("上联: ")
         next = model.predict(s)
         print("下联: ", next[0][:len(s)])

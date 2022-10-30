@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 import pytorch_lightning as pl
+from sklearn.model_selection import train_test_split
 
 from model.t5_base import T5BaseModel
 
@@ -68,7 +69,7 @@ def make_train_dataset(path: str = POEM_PATH, split_rate: float = 0.02):
 
 def train(
     train_df: pd.DataFrame,
-    test_df: pd.DataFrame,
+    eval_df: pd.DataFrame,
     model_path: str = MODEL_PATH
 ):
     pl.seed_everything(42)
