@@ -1,4 +1,5 @@
 import os
+import re
 
 import numpy as np
 import pandas as pd
@@ -6,11 +7,13 @@ from hanziconv import HanziConv
 from rich.progress import track
 from tqdm.notebook import tqdm
 
-TEST_FLOW = True
+TEST_FLOW = False
 MAX_AUTHOR_CHAR = 4
 MAX_TITLE_CHAR = 12
 MIN_CONTENT_CHAR = 10
 MAX_CONTENT_CHAR = 64
+
+FILTER_PATTERN = u"\\（.*?\\）|\\【.*?\\】|\\{.*?\\}|\\[.*?\\]"
 
 POEM_PATH = os.path.join(os.getcwd(), 'data', 'poems')
 POEM_RAW_PATH = os.path.join(POEM_PATH, 'raw')
@@ -52,11 +55,15 @@ def make_poem_dataset(raw_poem: pd.DataFrame):
         return row.s_author[:MAX_AUTHOR_CHAR]
 
     def trim_title_fn(row):
-        trim_title = row.s_title[:MAX_TITLE_CHAR].replace(" ", "").replace("(", "").replace(")", "")
+        filtered_title = re.sub(FILTER_PATTERN, "", row.s_title)
+        trim_title = filtered_title[:MAX_TITLE_CHAR].replace(" ", "")
         return trim_title
 
     def trim_content_fn(row):
-        trim_content = row.s_content[:MAX_CONTENT_CHAR]
+        filtered_content = re.sub(FILTER_PATTERN, "", row.s_content)
+        # 存在 xxx,xxx。（xxx）。的情况，所以要去掉最后一个句号
+        filtered_content = filtered_content.replace("。。", "。").replace("；", "。")
+        trim_content = filtered_content[:MAX_CONTENT_CHAR]
         return trim_content
 
     poems = raw_poem.copy()
@@ -73,12 +80,17 @@ def make_poem_dataset(raw_poem: pd.DataFrame):
     poems['s_title_trim'] = poems.apply(trim_title_fn, axis=1)
     poems['s_content_trim'] = poems.apply(trim_content_fn, axis=1)
 
+    print(f"total poems: {len(poems)}")
+
     print("removing empty title, content length < MIN_CONTENT_CHAR, empty content")
     empty_title_mask = (poems['s_title_trim'].str.len() == 0)
     too_short_content_mask = (poems['s_content_trim'].str.len() <= MIN_CONTENT_CHAR)
     invalid_mask = (('无正文' == poems['s_content_trim']) | ('无正文' == poems['s_author_trim']))
-    too_short_mask = empty_title_mask | too_short_content_mask | invalid_mask
-    filtered_poem = poems.loc[~too_short_mask][['s_author_trim', 's_title_trim', 's_content_trim']]
+    # □ to simplified chinese error transform
+    invalid_token_mask = ((poems['s_content_trim'].str.contains('□')) | poems['s_title_trim'].str.contains('□'))
+    mask = empty_title_mask | too_short_content_mask | invalid_mask | invalid_token_mask
+    filtered_poem = poems.loc[~mask][['s_author_trim', 's_title_trim', 's_content_trim']]
+    print(f"filtered poems: {len(filtered_poem)}")
 
     # get quality dataset
     filtered_poem.rename(columns={'s_author_trim': 'author', 's_title_trim': 'title', 's_content_trim': 'content'}, inplace=True)
