@@ -57,27 +57,29 @@ class CoupletDataset():
 
         return data_df
 
+
 class Couplet():
     def __init__(self, model_path) -> None:
         self.model = T5BaseModel()
-        self.model.load_model(model_path, use_gpu=True)
-        self.model.model = self.model.model.to('cuda')
+        self.model.load_model(model_path, use_gpu=False)
 
     def predict(self, in_str):
-        in_request = f"{COUPLET_PROMPT}{in_str[:MAX_SEQ_LEN]}"
         tgt_len = min(
             MAX_OUT_TOKENS,
-            len(in_str[:MAX_SEQ_LEN]) + 2
+            len(in_str) - len(COUPLET_PROMPT)
         )
         return self.model.predict(
-            in_request,
-            max_length=tgt_len,
+            in_str,
+            max_length=MAX_OUT_TOKENS,
             min_length=tgt_len,
-            num_beams=1,
-            top_p=1.0,
-            top_k=1,
+            num_beams=10,
             do_sample=True
         )
+
+    def preprocess(self, in_str):
+        in_request = f"{COUPLET_PROMPT}{in_str[:MAX_SEQ_LEN]}"
+        return in_request
+
 
 def train():
     pl.seed_everything(42)
@@ -87,7 +89,7 @@ def train():
     dataset = CoupletDataset(path=COUPLET_PATH, prompt=COUPLET_PROMPT)
 
     model.train(
-        train_df = dataset.train_df,
+        train_df=dataset.train_df,
         eval_df=dataset.test_df,
         source_max_token_len=MAX_IN_TOKENS,
         target_max_token_len=MAX_OUT_TOKENS,
@@ -97,16 +99,20 @@ def train():
         save_dir="./t5-couplet"
     )
 
+
 def predict():
     model_path = os.path.join(os.getcwd(), "checkpoints/t5-couplet")
     model = Couplet(model_path)
     while (True):
         s = input("上联: ")
-        next = model.predict(s)
-        print("下联: ", next[0][:len(s)])
+        in_str = model.preprocess(s)
+        next = model.predict(in_str)
+        print("下联: ", next[0])
+
 
 def main():
     predict()
+
 
 if __name__ == '__main__':
     main()

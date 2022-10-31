@@ -108,7 +108,7 @@ class T5BaseModel():
         self.tokenizer = T5Tokenizer.from_pretrained(model_name)
         self.model = T5ForConditionalGeneration.from_pretrained(model_name, return_dict=True)
 
-    def load_model(self, model_path: str, use_gpu: bool = True):
+    def load_model(self, model_path: str, use_gpu: bool = False):
         """ Load a checkpoint for inference/prediction
         Args:
             model_path (str): path to model directory

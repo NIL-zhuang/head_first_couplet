@@ -87,36 +87,40 @@ def train(
         save_dir='./t5-poems'
     )
 
-class Poem():
-    def __init__(self, model_path:str) -> None:
-        self.model=T5BaseModel()
-        self.model.load_model(model_path, use_gpu=True)
-        self.model.model = self.model.model.to('cuda')
 
-    def predict(self, in_str:str):
+class Poem():
+    def __init__(self, model_path: str) -> None:
+        self.model = T5BaseModel()
+        self.model.load_model(model_path, use_gpu=False)
+
+    def preprocess(self, author: str = None, title: str = None):
+        if author is None or len(author) == 0:
+            in_str = TITLE_PROMPT + title
+        else:
+            in_str = AUTHOR_PROMPT + author + EOS_TOKEN + TITLE_PROMPT + title
+        return in_str
+
+    def predict(self, in_str: str):
         return self.model.predict(
             in_str,
             max_length=MAX_OUT_TOKENS,
-            num_beams=1,
-            top_p=1.0,
-            top_k=1,
+            num_beams=10,
             do_sample=True
         )
+
 
 def main():
     model_path = os.path.join(os.getcwd(), "checkpoints/t5-poem")
     model = Poem(model_path)
 
-    while(True):
+    while (True):
         author = input(AUTHOR_PROMPT)
         title = input(TITLE_PROMPT)
-        if author is not None and len(author) != 0:
-            s = AUTHOR_PROMPT + author + EOS_TOKEN + TITLE_PROMPT + title
-        else:
-            s = TITLE_PROMPT + title
-        print(' '*5, s)
+        s = model.preprocess(author, title)
+        print(' ' * 5, s)
         next = model.predict(s)
         print(next[0])
+
 
 if __name__ == '__main__':
     main()
