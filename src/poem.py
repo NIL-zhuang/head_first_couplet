@@ -104,7 +104,7 @@ class Poem():
         )
 
 def main():
-    model_path =r"/home/zhuangzy/head_first_couplet/t5-poems/simplet5-epoch-4-train-loss-3.5093-val-loss-3.4993"
+    model_path = os.path.join(os.getcwd(), "checkpoints/t5-poem")
     model = Poem(model_path)
 
     while(True):
@@ -119,6 +119,6 @@ def main():
         print(next[0])
 
 if __name__ == '__main__':
-    # main()
-    train_df, test_df = make_train_dataset()
-    train(train_df, test_df)
+    main()
+    # train_df, test_df = make_train_dataset()
+    # train(train_df, test_df)

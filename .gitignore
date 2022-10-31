@@ -1,6 +1,5 @@
 lightning_logs
-t5-couplet
-t5-poems
+checkpoints
 .vscode
 .idea
 data/poems
