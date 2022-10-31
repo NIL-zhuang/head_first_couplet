@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from hanziconv import HanziConv
 from rich.progress import track
-from tqdm.notebook import tqdm
 
 TEST_FLOW = False
 MAX_AUTHOR_CHAR = 4
