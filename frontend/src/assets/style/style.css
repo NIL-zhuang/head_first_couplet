@@ -1,0 +1,64 @@
+.center-in-center {
+    width: 50%;
+    height: 50%;
+    overflow: auto;
+    margin: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+.title {
+    text-align: center;
+    font-size: 60px;
+}
+
+.text-light {
+    color: black;
+}
+
+.text-dark {
+    color: white;
+    margin-left: 30px;
+}
+
+button {
+    text-align: center;
+    margin: 70px;
+    height: 60px;
+    width: 200px;
+    border-radius: 20px;
+    font-size: 30px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: all 1 ease;
+}
+
+#button-trans {
+    margin-left: 110px;
+    color: white;
+    border: 1px solid rgb(15, 0, 0);
+    background: none;
+}
+
+#button-trans:hover {
+    border: none;
+    background: #fdfdfd;
+    color: black;
+}
+
+#button-hard {
+    border: 1px solid white;
+    color: black;
+    background: white;
+}
+
+
+#button-hard:hover {
+    border: none;
+    background: none;
+    color: white;
+}
