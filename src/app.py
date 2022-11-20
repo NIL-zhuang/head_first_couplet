@@ -1,4 +1,5 @@
 import logging
+import re
 
 from flask import Flask, request
 from flask_cors import CORS
@@ -23,10 +24,16 @@ class Handler():
     def postprocess(self, output):
         return output
 
-    def __call__(self, context):
+    def process(self, context):
         input = self.preprocess(context)
         output = self.predict(input)
         return self.postprocess(output)
+
+    def __call__(self, context):
+        return self.process(context)
+
+
+PATTEN = r"。|？|！｜?|，|,"
 
 
 class PoemHandler(Handler):
@@ -45,6 +52,8 @@ class PoemHandler(Handler):
         return self.poem.predict(input)
 
     def postprocess(self, output):
+        output = re.split(PATTEN, output[0])
+        output = [s for s in output if s and len(s) > 0]
         self.poem_logger.info(f"output: {output}")
         return super().postprocess(output)
 
@@ -64,26 +73,27 @@ class CoupletHandler(Handler):
         return self.couplet.predict(upper)
 
     def postprocess(self, output):
+        output = output[0]
         self.couplet_logger.info(f"output: {output}")
         return super().postprocess(output)
 
 
-poem_processor = PoemHandler()
-couplet_processor = CoupletHandler()
+poem_handler = PoemHandler()
+couplet_handler = CoupletHandler()
 
 
 @app.route('/couplet', methods=['GET', 'POST'])
-def couplet_handler():
+def get_couplet():
     data = request.get_json()
     logger.info(f"Couplet Receive {data}")
-    return couplet_processor(data)
+    return couplet_handler(data)
 
 
 @app.route('/poem', methods=['GET', 'POST'])
-def poem_handler():
+def get_poem():
     data = request.get_json()
     logger.info(f"Poem Receive {data}")
-    return poem_processor(data)
+    return poem_handler(data)
 
 
 if __name__ == "__main__":

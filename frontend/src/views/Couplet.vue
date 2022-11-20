@@ -18,9 +18,24 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { getCurrentInstance, ref } from 'vue';
+
 const preCouplet = ref()
 const nextCouplet = ref('骏马踏春万木荣')
+const internalInstance = getCurrentInstance();
+const axios = internalInstance.appContext.config.globalProperties.axios;
+
+function getNextCouplet() {
+    console.log('preCouplet: ', preCouplet.value)
+    axios.post('http://127.0.0.1:5000/couplet', {
+        'upper': preCouplet.value,
+    }).then(function (response) {
+        console.log(response.data)
+        nextCouplet.value = response.data
+    }).catch(function (error) {
+        console.log(error);
+    })
+}
 </script>
 
 <style scoped>
