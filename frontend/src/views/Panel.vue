@@ -2,25 +2,31 @@
     <div>
         <nav class="sidebar">
             <header>
-                <div>AI Poet</div>
+                <div>AI Poet & Couplet</div>
             </header>
             <div>
                 <ul>
-                    <li class="nav-link">
-                        <router-link class="bx bx-home-alt icon" to="/">
-                            <span class="nav-text"> Home </span>
-                        </router-link>
-                    </li>
-                    <li class="nav-link">
-                        <router-link class="bx bx-heart icon" to="/poem">
-                            <span class="nav-text"> Poem </span>
-                        </router-link>
-                    </li>
-                    <li class="nav-link">
-                        <router-link class="bx bx-heart icon" to="/couplet">
-                            <span class="nav-text"> Couplet </span>
-                        </router-link>
-                    </li>
+                    <router-link to="/">
+                        <li class="nav-link">
+                            <div class="bx bx-home-alt icon" to="/">
+                                <span class="nav-text"> Home </span>
+                            </div>
+                        </li>
+                    </router-link>
+                    <router-link to="/poem">
+                        <li class="nav-link">
+                            <div class="bx bx-heart icon">
+                                <span class="nav-text"> Poem </span>
+                            </div>
+                        </li>
+                    </router-link>
+                    <router-link to="/couplet">
+                        <li class="nav-link">
+                            <div class="bx bx-heart icon">
+                                <span class="nav-text"> Couplet </span>
+                            </div>
+                        </li>
+                    </router-link>
                 </ul>
             </div>
         </nav>
